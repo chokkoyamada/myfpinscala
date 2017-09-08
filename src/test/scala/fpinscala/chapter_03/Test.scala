@@ -55,4 +55,16 @@ class Test extends FunSuite {
     assert(drop(List(1, 2, 3, 4, 5), 3) == List(4, 5))
     assert(drop(Nil, 1) == Nil)
   }
+
+  test("Ex 3.5 述語とマッチする場合に限り、Listからその要素までを削除するdropWhileを実装せよ。") {
+    def dropWhile[A](as: List[A])(f: A => Boolean): List[A] = {
+      as match {
+        case Nil => Nil
+        case Cons(h, t) if f(h) => dropWhile(t)(f)
+        case Cons(h, t) => Cons(h, t)
+      }
+    }
+
+    assert(dropWhile(List(1, 2, 3, 4, 5))(x => x < 3) == List(3, 4, 5))
+  }
 }
