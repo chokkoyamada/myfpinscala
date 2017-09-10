@@ -9,11 +9,11 @@ class Test extends FunSuite {
   test("Ex 3.1 次のマッチ式はどのような結果になるか。") {
 
     val sut = List(1, 2, 3, 4, 5) match {
-      case Cons(x, Cons(2, Cons(4, _)))          => x
-      case Nil                                   => 42
+      case Cons(x, Cons(2, Cons(4, _))) => x
+      case Nil => 42
       case Cons(x, Cons(y, Cons(3, Cons(4, _)))) => x + y //このパターンにマッチする
-      case Cons(h, t)                            => h + List.sum(t)
-      case _                                     => 102
+      case Cons(h, t) => h + List.sum(t)
+      case _ => 102
     }
 
     assert(sut == 3)
@@ -21,33 +21,30 @@ class Test extends FunSuite {
 
   test("Ex 3.2 Listの最初の要素を削除する関数tailを実装せよ。") {
 
-    object ListNeo {
-      def tail[A](l: List[A]): List[A] = l match {
-        case Nil        => Nil
-        case Cons(_, t) => t
-      }
+    def tail[A](l: List[A]): List[A] = l match {
+      case Nil => Nil
+      case Cons(_, t) => t
     }
 
-    assert(ListNeo.tail(List(1, 2, 3, 4, 5)) == List(2, 3, 4, 5))
+    assert(tail(List(1, 2, 3, 4, 5)) == List(2, 3, 4, 5))
+
   }
 
   test("Ex 3.3 Listの最初の要素を別の値と置き換えるsetHead関数を実装せよ。") {
 
-    object ListNeo {
-      def setHead[A](l: List[A])(x: A): List[A] = l match {
-        case Nil        => Nil
-        case Cons(_, t) => Cons(x, t)
-      }
+    def setHead[A](l: List[A])(x: A): List[A] = l match {
+      case Nil => Nil
+      case Cons(_, t) => Cons(x, t)
     }
 
-    assert(ListNeo.setHead(List(1, 2, 3, 4, 5))(0) === List(0, 2, 3, 4, 5))
+    assert(setHead(List(1, 2, 3, 4, 5))(0) === List(0, 2, 3, 4, 5))
   }
 
   test("Ex 3.4 リストの先頭からn個の要素を削除するdropという関数を実装せよ。") {
     def drop[A](as: List[A], n: Int): List[A] =
       if (n > 0) {
         as match {
-          case Nil        => Nil
+          case Nil => Nil
           case Cons(_, t) => drop(t, n - 1)
         }
       } else as
@@ -66,5 +63,135 @@ class Test extends FunSuite {
     }
 
     assert(dropWhile(List(1, 2, 3, 4, 5))(x => x < 3) == List(3, 4, 5))
+  }
+
+  test("Ex 3.6 Listの末尾を除くすべての要素で構成されたListを返すInit関数を実装せよ。この関数をtailのように一定時間で実装できないのはなぜか。") {
+    def init[A](l: List[A]): List[A] =
+      l match {
+        case Nil => sys.error("init of Nil")
+        case Cons(_, Nil) => Nil
+        case Cons(h, t) => Cons(h, init(t))
+      }
+
+    /*
+    List(1, 2, 3, 4)のときのトレース
+
+    Cons(1, init(List(2, 3, 4)))
+    Cons(1, Cons(2, init(List(3, 4)))))
+    Cons(1, Cons(2, Cons(3, init(List(4, Nil))))))
+    Cons(1, Cons(2, Cons(3, Nil))))
+    List(1, 2, 3)
+
+    このように、スタックに一度つみあげる必要があるため、一定時間では実装できない。
+
+     */
+
+    assert(init(List(1, 2, 3, 4)) == List(1, 2, 3))
+
+    //ListBufferを使うバージョン。mutableを使うが、関数内に閉じているので、参照透過性を破っていない。
+    def init2[A](l: List[A]): List[A] = {
+      import collection.mutable.ListBuffer
+      val buf = new ListBuffer[A]
+
+      def go(cur: List[A]): List[A] = cur match {
+        case Nil => sys.error("init of Nil")
+        case Cons(h, Nil) => List(buf.toList: _*)
+        case Cons(h, t) => buf += h; go(t)
+      }
+
+      go(l)
+    }
+
+    assert(init2(List(1, 2, 3, 4)) == List(1, 2, 3))
+  }
+
+  test("Ex 3.7 foldRightを使って実装されたproductは、0.0を検出した際に、直ちに再帰を中止して0.0を返せるか。その理由を説明せよ。") {
+    assert(List.product2(List(1.0, 2.0, 3.0, 0.0, 5.0)) == 0.0)
+    /*
+    再帰を途中で中止することはできない。理由はfoldRightはリストを最後まで走査してからでなければ畳み込みを開始できないから。
+
+    product2( List(1.0, 2.0, 3.0, 0.0, 5.0) )
+    foldRight( List(1.0, 2.0, 3.0, 0.0, 5.0), 1.0 )(f)
+
+    f(
+      1.0, foldRight(List(2.0, 3.0, 0.0, 5.0), 1.0)(f)
+    )(f)
+
+    f(
+      1.0,
+        f(
+          2.0, foldRight(List(3.0, 0.0, 5.0), 1.0)(f)
+        )(f)
+    )(f)
+
+    f(
+      1.0,
+        f(
+          2.0,
+            f(
+              3.0, foldRight(List(0.0, 5.0), 1.0)(f)
+            )(f)
+        )(f)
+    )(f)
+
+    f(
+      1.0,
+        f(
+          2.0,
+            f(
+              3.0,
+                f(
+                  0.0, foldRight(List(5.0), 1.0)(f)
+                )(f)
+            )(f)
+        )(f)
+    )(f)
+
+    f(
+      1.0,
+        f(
+          2.0,
+            f(
+              3.0,
+                f(
+                  0.0,
+                    f(
+                      5.0, foldRight(Nil, 1.0)(f)
+                    )(f)
+                )(f)
+            )(f)
+        )(f)
+    )(f)
+
+
+    f(
+      1.0,
+        f(
+          2.0,
+            f(
+              3.0,
+                f(
+                  0.0,
+                    f(
+                      5.0,
+                        1.0
+                    )(f)
+                )(f)
+            )(f)
+        )(f)
+    )(f)
+     */
+  }
+
+  test("3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
+    assert(List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) === Cons(1, Cons(2, Cons(3, Nil))))
+    /*
+    f(x, foldRight((xs, z)(f))
+    Cons(x, foldRight(xs, z)(Cons(_,_))
+    Cons(x, Cons(x, foldRight(xs, z)(Cons(_,_)))
+    Cons(x, Cons(x, Cons(x, foldRight(xs, z)(Cons(_,_))))
+    ...
+    となる。
+     */
   }
 }
