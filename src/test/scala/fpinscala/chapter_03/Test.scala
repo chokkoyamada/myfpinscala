@@ -183,7 +183,7 @@ class Test extends FunSuite {
      */
   }
 
-  test("3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
+  test("Ex. 3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
     assert(List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) === Cons(1, Cons(2, Cons(3, Nil))))
     /*
     f(x, foldRight((xs, z)(f))
@@ -193,5 +193,24 @@ class Test extends FunSuite {
     ...
     となる。
      */
+  }
+
+  test("Ex 3.9 foldRightを使ってリストの長さを計算せよ。") {
+    def length[A](as: List[A]): Int = {
+      def go(n: Int, l: List[A]): Int = l match {
+        case Nil => n
+        case Cons(h, t) => go(n + 1, t)
+      }
+
+      go(0, as)
+    }
+
+    assert(length(List(1, 2, 3, 4, 5)) == 5)
+    assert(length(List("a", "b", "c")) == 3)
+    assert(length(Nil) == 0)
+  }
+
+  test("Ex 3.10 前章で説明した手法を使って、リスト再帰の総称関数foldLeftを記述せよ。") {
+    def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = ???
   }
 }
