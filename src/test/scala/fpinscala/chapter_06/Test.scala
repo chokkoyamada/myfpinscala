@@ -95,12 +95,7 @@ class Test extends FunSuite with Matchers {
       }
     }
 
-    def map22[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = {
-      rng => {
-
-        ( f(ra(rng)
-      }
-    }
+    def map22[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
   }
 
   test("Ex 6.7 2つのRNG遷移の組み合わせが可能であるとしたら、それらのリスト全体を結合することも可能であるはずだ。遷移のリストを1つの遷移にまとめるためのsequenceを実装せよ。それを使って、以前に記述したints関数を再実装せよ。その際には、標準ライブラリのList.fill(n)(x)関数を使ってxをn回繰り返すリストを作成できる。"){

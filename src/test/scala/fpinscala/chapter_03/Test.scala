@@ -211,6 +211,10 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.10 前章で説明した手法を使って、リスト再帰の総称関数foldLeftを記述せよ。") {
-    def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = ???
+    //foldLeftは左からたたみこむ、つまりConsのhead要素に対して関数を適用していく。
+    def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = as match {
+      case Nil => z
+      case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+    }
   }
 }
