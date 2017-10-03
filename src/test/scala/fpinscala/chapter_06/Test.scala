@@ -1,6 +1,6 @@
 package fpinscala.chapter_06
 
-import fpinscala.state.RNG
+import fpinscala.state.{RNG, State}
 import fpinscala.state.RNG._
 import org.scalatest.{FunSuite, Matchers}
 
@@ -19,21 +19,24 @@ class Test extends FunSuite with Matchers {
     assert(rng3 == SimpleRNG(197491923327988L))
   }
 
-  test("EX 6.1 RNG.nextIntを使って0~Int.maxValue(0とInt.maxValueを含む)のランダムな整数を生成する関数を記述せよ。なお、nextIntがInt.minValueを返すときには、対応する自然数がない。この特異なケースにも対処する必要がある。") {
+  test(
+    "EX 6.1 RNG.nextIntを使って0~Int.maxValue(0とInt.maxValueを含む)のランダムな整数を生成する関数を記述せよ。なお、nextIntがInt.minValueを返すときには、対応する自然数がない。この特異なケースにも対処する必要がある。") {
     def nonNegativeInt(rng: RNG): (Int, RNG) = {
       val (a, b) = rng.nextInt
       if (a < 0) (-a + 1, b) else (a, b)
     }
   }
 
-  test("Ex 6.2 0~1(1を含まない)のDouble型の値を生成する関数を記述せよ。Int.MaxValueを使って正の整数の最大値を取得できることと、x.toDoubleを使ってx: IntをDoubleに変換できることに注意。") {
+  test(
+    "Ex 6.2 0~1(1を含まない)のDouble型の値を生成する関数を記述せよ。Int.MaxValueを使って正の整数の最大値を取得できることと、x.toDoubleを使ってx: IntをDoubleに変換できることに注意。") {
     def double(rng: RNG): (Double, RNG) = {
       val (a, b) = rng.nextInt
       ((a / Int.MaxValue).toDouble, b)
     }
   }
 
-  test("Ex 6.3 ペア(Int, Double) ペア(Double, Int), および三要素のタプル(Double, Double, Double)を生成する関数を記述せよ。すでに作成済みの関数を再利用できるはずだ。") {
+  test(
+    "Ex 6.3 ペア(Int, Double) ペア(Double, Int), および三要素のタプル(Double, Double, Double)を生成する関数を記述せよ。すでに作成済みの関数を再利用できるはずだ。") {
     def double(rng: RNG): (Double, RNG) = {
       val (a, b) = rng.nextInt
       ((a / Int.MaxValue).toDouble, b)
@@ -88,19 +91,22 @@ class Test extends FunSuite with Matchers {
 
   }
 
-  test("Ex 6.6 以下のシグネチャにもとづいてmap2を実装せよ。この関数は、raとrbの2つのアクションと、それらの結果を結合する関数fを受取り、それらを結合する新しいアクションを返す。") {
+  test(
+    "Ex 6.6 以下のシグネチャにもとづいてmap2を実装せよ。この関数は、raとrbの2つのアクションと、それらの結果を結合する関数fを受取り、それらを結合する新しいアクションを返す。") {
     def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = {
-      rng => {
-        val (a, rng2) = ra(rng)
-        val (b, rng3) = rb(rng2)
-        (f(a, b), rng3)
-      }
+      rng =>
+        {
+          val (a, rng2) = ra(rng)
+          val (b, rng3) = rb(rng2)
+          (f(a, b), rng3)
+        }
     }
 
-    def map22[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+    def map2_[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
   }
 
-  test("Ex 6.7 2つのRNG遷移の組み合わせが可能であるとしたら、それらのリスト全体を結合することも可能であるはずだ。遷移のリストを1つの遷移にまとめるためのsequenceを実装せよ。それを使って、以前に記述したints関数を再実装せよ。その際には、標準ライブラリのList.fill(n)(x)関数を使ってxをn回繰り返すリストを作成できる。") {
+  test(
+    "Ex 6.7 2つのRNG遷移の組み合わせが可能であるとしたら、それらのリスト全体を結合することも可能であるはずだ。遷移のリストを1つの遷移にまとめるためのsequenceを実装せよ。それを使って、以前に記述したints関数を再実装せよ。その際には、標準ライブラリのList.fill(n)(x)関数を使ってxをn回繰り返すリストを作成できる。") {
     def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
       fs.foldRight(unit(List.empty[A]))((a, b) => map2(a, b)(_ :: _))
   }
@@ -130,7 +136,8 @@ class Test extends FunSuite with Matchers {
     }
   }
 
-  test("Ex 6.9 flatMapを使ってmapとmap2を再実装せよ。これが可能であることは、flatMapがmapとmap2よりも強力であると述べていることから明らかである。") {
+  test(
+    "Ex 6.9 flatMapを使ってmapとmap2を再実装せよ。これが可能であることは、flatMapがmapとmap2よりも強力であると述べていることから明らかである。") {
     def map[A, B](s: Rand[A])(f: A => B): Rand[B] =
       flatMap(s)(a => unit(f(a)))
 
@@ -139,37 +146,100 @@ class Test extends FunSuite with Matchers {
     }
   }
 
+  test(
+    "Ex 6.10 unit, map, map2, flatMap, sequenceの5つの関数を一般化せよ。可能であれば、それらをStateケースクラスのメソッドとして追加せよ。それが不可能であれば、Stateコンパニオンオブジェクトに配置せよ。") {
+    import State.unit //RNG.unitを使ってしまうため
 
-  test("Ex 6.10 unit, map, map2, flatMap, sequenceの5つの関数を一般化せよ。可能であれば、それらをStateケースクラスのメソッドとして追加せよ。それが不可能であれば、Stateコンパニオンオブジェクトに配置せよ。") {
     case class State[S, +A](run: S => (A, S)) {
-      def unit[S, A](a: A): State[S, A] =
-        State(s => (a, s))
+      def flatMap[B](f: A => State[S, B]): State[S, B] =
+        State(s => {
+          val (a, s1) = run(s)
+          f(a).run(s1)
+        })
 
-      def flatMap[B](f: A => State[S, B]): State[S, B] = State(s => {
-        val (a, s1) = run(s)
-        f(a).run(s1)
-      })
-
-      def map[A, B](f: A => B): State[S, B] =
+      def map[B](f: A => B): State[S, B] =
         flatMap(a => unit(f(a)))
 
-      def maps2[A, B, C](a: State[S, A], b: State[S, B])(f: (A, B) => C) =
-        flatMap(a => map(b => f(a, b)))
-      def map2_[A, B, C](a: State[S, A], b: State[S, B])(f: (A, B) => C) =
-        for{
-          a1 <- a
-          b1 <- b
+      def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
+        flatMap(a => sb.map(b => f(a, b)))
+
+      def map2_[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
+        for {
+          a1 <- this
+          b1 <- sb
         } yield f(a1, b1)
     }
 
+    object State {
+      type Rand[A] = State[RNG, A]
+
+      def unit[S, A](a: A): State[S, A] = State(s => (a, s))
+
+      def sequenceViaFoldRight[S, A](
+          sas: List[State[S, A]]): State[S, List[A]] =
+        sas.foldRight(unit[S, List[A]](List()))((f, acc) => f.map2(acc)(_ :: _))
+
+      def sequence[S, A](sas: List[State[S, A]]): State[S, List[A]] = {
+        def go(s: S, actions: List[State[S, A]], acc: List[A]): (List[A], S) =
+          actions match {
+            case Nil => (acc.reverse, s)
+            case h :: t =>
+              h.run(s) match {
+                case (a, s2) => go(s2, t, a :: acc)
+              }
+          }
+
+        State((s: S) => go(s, sas, List()))
+      }
+    }
   }
 
-  test("Ex 6.11 Stateの使用に慣れるために、単純なスナックの自動販売機をモデリングする有限状態オートマトンを実装せよ。この自動販売機では、2種類の入力を使用する。すなわち、効果を投入することができ、ハンドルを回してスナックを取り出すことができる。自動販売機はロックされた状態とロックが解除された状態のどちらかになる。また、残りのスナックの数と自動販売機に投入された硬貨の数も追跡する。") {
-    sealed trait Input
-    case object Coin extends Input
-    case object Turn extends Input
+  test(
+    "Ex 6.11 Stateの使用に慣れるために、単純なスナックの自動販売機をモデリングする有限状態オートマトンを実装せよ。この自動販売機では、2種類の入力を使用する。すなわち、効果を投入することができ、ハンドルを回してスナックを取り出すことができる。自動販売機はロックされた状態とロックが解除された状態のどちらかになる。また、残りのスナックの数と自動販売機に投入された硬貨の数も追跡する。") {
+    import fpinscala.state._
+
+    object Candy {
+      def update(i: Input)(s: Machine): Machine =
+        (i, s) match {
+          case (_, Machine(_, 0, _))        => s
+          case (Coin, Machine(false, _, _)) => s
+          case (Turn, Machine(true, _, _))  => s
+          case (Coin, Machine(true, candy, coin)) =>
+            Machine(false, candy, coin + 1)
+          case (Turn, Machine(false, candy, coin)) =>
+            Machine(true, candy - 1, coin)
+        }
+
+      def simulateMachine(inputs: List[Input]): (Int, Int) = {
+        var machine = Machine(true, 5, 10)
+        inputs.foreach(i => machine = update(i)(machine))
+        (machine.coins, machine.candies)
+      }
+      /*
+      def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
+        val l = for {
+          input <- inputs
+        } yield modify[Machine](update(input))
+        for {
+          _ <- State.sequence(l)
+          s <- get
+        } yield (s.coins, s.candies)
+      }
+     */
+    }
+
+    Candy.simulateMachine(List(Coin, Turn, Coin, Turn, Coin, Turn, Coin, Turn)) shouldBe (14, 1)
+  }
+
+  test("State.getについて") {
+    import fpinscala.state.State._
+    //状態がrunされれば値を返す　
+    get.run(1) shouldBe (1, 1)
+    get[Int].run(2) shouldBe (2, 2)
+
     case class Machine(locked: Boolean, candies: Int, coins: Int)
+    get.run(Machine(false, 2, 3)) shouldBe (Machine(false, 2, 3), Machine(false,
+                                                                          2,
+                                                                          3))
   }
-
-
 }
