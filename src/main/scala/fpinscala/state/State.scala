@@ -41,6 +41,22 @@ object RNG {
     }
   }
 
+  def both[B, C](ra: Rand[B], rb: Rand[C]): Rand[(B, C)] =
+    map2(ra, rb)((_, _))
+
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A ]] =
+    fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
+
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
+    def go(count: Int, r: RNG, xs: List[Int]): (List[Int], RNG) =
+      if (count == 0)
+        (xs, r)
+      else {
+        val (x, r2) = r.nextInt
+        go(count - 1, r2, x :: xs)
+      }
+    go(count, rng, List())
+  }
 }
 
 import State._
