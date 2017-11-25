@@ -7,11 +7,11 @@ class Test extends FunSuite {
   test("Ex 3.1 次のマッチ式はどのような結果になるか。") {
 
     val sut = List(1, 2, 3, 4, 5) match {
-      case Cons(x, Cons(2, Cons(4, _))) => x
-      case Nil => 42
+      case Cons(x, Cons(2, Cons(4, _)))          => x
+      case Nil                                   => 42
       case Cons(x, Cons(y, Cons(3, Cons(4, _)))) => x + y //このパターンにマッチする
-      case Cons(h, t) => h + List.sum(t)
-      case _ => 102
+      case Cons(h, t)                            => h + List.sum(t)
+      case _                                     => 102
     }
 
     assert(sut == 3)
@@ -20,7 +20,7 @@ class Test extends FunSuite {
   test("Ex 3.2 Listの最初の要素を削除する関数tailを実装せよ。") {
     //Consでheadとtailに分割してtailを返せばよい
     def tail[A](l: List[A]): List[A] = l match {
-      case Nil => Nil
+      case Nil        => Nil
       case Cons(_, t) => t
     }
 
@@ -30,7 +30,7 @@ class Test extends FunSuite {
   test("Ex 3.3 Listの最初の要素を別の値と置き換えるsetHead関数を実装せよ。") {
 
     def setHead[A](l: List[A])(x: A): List[A] = l match {
-      case Nil => Nil
+      case Nil        => Nil
       case Cons(_, t) => Cons(x, t)
     }
 
@@ -42,7 +42,7 @@ class Test extends FunSuite {
     def drop[A](as: List[A], n: Int): List[A] =
       if (n > 0) {
         as match {
-          case Nil => Nil
+          case Nil        => Nil
           case Cons(_, t) => drop(t, n - 1)
         }
       } else as
@@ -55,20 +55,21 @@ class Test extends FunSuite {
     def dropWhile[A](as: List[A])(f: A => Boolean): List[A] =
       // tailをrecursionで適用する
       as match {
-        case Nil => Nil
+        case Nil                => Nil
         case Cons(h, t) if f(h) => dropWhile(t)(f)
-        case Cons(h, t) => Cons(h, t)
+        case Cons(h, t)         => Cons(h, t)
       }
 
     assert(dropWhile(List(1, 2, 3, 4, 5))(x => x < 3) == List(3, 4, 5))
   }
 
-  test("Ex 3.6 Listの末尾を除くすべての要素で構成されたListを返すInit関数を実装せよ。この関数をtailのように一定時間で実装できないのはなぜか。") {
+  test(
+    "Ex 3.6 Listの末尾を除くすべての要素で構成されたListを返すInit関数を実装せよ。この関数をtailのように一定時間で実装できないのはなぜか。") {
     def init[A](l: List[A]): List[A] =
       l match {
-        case Nil => sys.error("init of Nil")
+        case Nil          => sys.error("init of Nil")
         case Cons(_, Nil) => Nil
-        case Cons(h, t) => Cons(h, init(t)) //末尾再帰にはなっていない（できない）
+        case Cons(h, t)   => Cons(h, init(t)) //末尾再帰にはなっていない（できない）
       }
 
     /*
@@ -92,9 +93,9 @@ class Test extends FunSuite {
       val buf = new ListBuffer[A]
 
       def go(cur: List[A]): List[A] = cur match {
-        case Nil => sys.error("init of Nil")
+        case Nil          => sys.error("init of Nil")
         case Cons(h, Nil) => List(buf.toList: _*)
-        case Cons(h, t) => buf += h; go(t) //末尾再帰
+        case Cons(h, t)   => buf += h; go(t) //末尾再帰
       }
 
       go(l)
@@ -103,7 +104,8 @@ class Test extends FunSuite {
     assert(init2(List(1, 2, 3, 4)) == List(1, 2, 3))
   }
 
-  test("Ex 3.7 foldRightを使って実装されたproductは、0.0を検出した際に、直ちに再帰を中止して0.0を返せるか。その理由を説明せよ。") {
+  test(
+    "Ex 3.7 foldRightを使って実装されたproductは、0.0を検出した際に、直ちに再帰を中止して0.0を返せるか。その理由を説明せよ。") {
     assert(List.product2(List(1.0, 2.0, 3.0, 0.0, 5.0)) == 0.0)
     /*
     再帰を途中で中止することはできない。理由はfoldRightはリストを最後まで走査してからでなければ畳み込みを開始できないから。
@@ -178,11 +180,15 @@ class Test extends FunSuite {
             )(f)
         )(f)
     )(f)
-     */
+   */
   }
 
-  test("Ex 3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
-    assert(List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) === Cons(1, Cons(2, Cons(3, Nil))))
+  test(
+    "Ex 3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
+    assert(
+      List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) === Cons(
+        1,
+        Cons(2, Cons(3, Nil))))
     /*
     f(x, foldRight((xs, z)(f))
     Cons(x, foldRight(xs, z)(Cons(_,_))
@@ -191,14 +197,14 @@ class Test extends FunSuite {
     ...
     となる。
     foldRightはListのデータコンストラクタの実装と同じである。
-     */
+   */
   }
 
   test("Ex 3.9 foldRightを使ってリストの長さを計算せよ。") {
     //素直に実装したバージョン
     def length[A](as: List[A]): Int = {
       def go(n: Int, l: List[A]): Int = l match {
-        case Nil => n
+        case Nil        => n
         case Cons(h, t) => go(n + 1, t)
       }
 
@@ -221,7 +227,7 @@ class Test extends FunSuite {
   test("Ex 3.10 前章で説明した手法を使って、リスト再帰の総称関数foldLeftを記述せよ。") {
     //foldLeftは左からたたみこむ、つまりConsのhead要素に対して関数を適用していく。
     def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = as match {
-      case Nil => z
+      case Nil        => z
       case Cons(h, t) => foldLeft(t, f(z, h))(f)
     }
 
@@ -250,12 +256,13 @@ class Test extends FunSuite {
     assert(length(List(1, 2, 3, 4)) == 4)
   }
 
-  test("Ex 3.12 要素が逆に並んだリストを返す関数を記述せよ。List(1, 2, 3)が与えられた場合、この関数はList(3, 2, 1)を返す。畳み込みを使って記述できるかどうかを確認すること。") {
+  test(
+    "Ex 3.12 要素が逆に並んだリストを返す関数を記述せよ。List(1, 2, 3)が与えられた場合、この関数はList(3, 2, 1)を返す。畳み込みを使って記述できるかどうかを確認すること。") {
     //素直に実装したバージョン
     def reverse[A](ns: List[A]): List[A] = {
       def go(ns: List[A], l: List[A]): List[A] =
         ns match {
-          case Nil => l
+          case Nil        => l
           case Cons(h, t) => go(t, Cons(h, l))
         }
 
@@ -272,19 +279,23 @@ class Test extends FunSuite {
     assert(reverse2(List(5, 3, 6, 9, 0)) == List(0, 9, 6, 3, 5))
   }
 
-  test("Ex 3.13 難問：foldRightをベースとして、foldLeftを記述することは可能か。その逆はどうか。foldLeftを使ってfoldRightを実装すると、foldRightを末尾再帰的に実装がすることが可能となり、大きなリストでもスタックオーバーフローが発生しなくなるので便利である。") {
-    def foldLeftViaFoldRight[A,B](l: List[A], z: B)(f: (B,A) => B): B =
-      List.foldRight(l, (b:B) => b)((a,g) => b => g(f(b,a)))(z)
+  test(
+    "Ex 3.13 難問：foldRightをベースとして、foldLeftを記述することは可能か。その逆はどうか。foldLeftを使ってfoldRightを実装すると、foldRightを末尾再帰的に実装がすることが可能となり、大きなリストでもスタックオーバーフローが発生しなくなるので便利である。") {
+    def foldLeftViaFoldRight[A, B](l: List[A], z: B)(f: (B, A) => B): B =
+      List.foldRight(l, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
 
-    assert(List.foldLeft(List(1, 2, 3, 4, 5), 0)(_ + _) == foldLeftViaFoldRight(List(1, 2, 3, 4, 5), 0)(_ + _))
+    assert(
+      List.foldLeft(List(1, 2, 3, 4, 5), 0)(_ + _) == foldLeftViaFoldRight(
+        List(1, 2, 3, 4, 5),
+        0)(_ + _))
 
     //TODO 分からない。あとで見返す
-    def foldRightViaFoldLeft[A,B](l: List[A], z: B)(f: (A,B) => B): B =
-      List.foldLeft(List.reverse(l), z)((b,a) => f(a,b))
+    def foldRightViaFoldLeft[A, B](l: List[A], z: B)(f: (A, B) => B): B =
+      List.foldLeft(List.reverse(l), z)((b, a) => f(a, b))
 
     //TODO 分からない。あとで見返す
-    def foldRightViaFoldLeft_1[A,B](l: List[A], z: B)(f: (A,B) => B): B =
-      List.foldLeft(l, (b:B) => b)((g,a) => b => g(f(a,b)))(z)
+    def foldRightViaFoldLeft_1[A, B](l: List[A], z: B)(f: (A, B) => B): B =
+      List.foldLeft(l, (b: B) => b)((g, a) => b => g(f(a, b)))(z)
   }
 
   test("Ex 3.14 foldLeftまたはfoldRightをベースとしてappendを実装せよ。") {
@@ -295,7 +306,8 @@ class Test extends FunSuite {
 
   }
 
-  test("Ex 3.15 難問：複数のリストからなるリストを1つのリストとして連結する関数を記述せよ。この関数の実行時間はすべてのリストの長さの合計に対して線形になるはずである。すでに定義した関数を使ってみること。") {
+  test(
+    "Ex 3.15 難問：複数のリストからなるリストを1つのリストとして連結する関数を記述せよ。この関数の実行時間はすべてのリストの長さの合計に対して線形になるはずである。すでに定義した関数を使ってみること。") {
     def concat[A](l: List[List[A]]): List[A] =
       List.foldRight(l, List[A]())(List.appendViaFoldRight)
 
@@ -303,66 +315,71 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.16 各要素に1を足すことで整数のリストを変換する関数を記述せよ。注意：これは新しいListを返す純粋関数に鳴るはずである。") {
-    def add(l: List[Int]): List[Int] = List.foldRight(l, Nil:List[Int])((h, t) => Cons(h+1, t))
+    def add(l: List[Int]): List[Int] =
+      List.foldRight(l, Nil: List[Int])((h, t) => Cons(h + 1, t))
     //def add2(l: List[Int]): List[Int] = List.foldLeft(l, Nil:List[Int])((t, h) => Cons(h+1, t)) 逆になってしまうのでこれはできない
 
     assert(add(List(1, 2, 3)) == List(2, 3, 4))
   }
 
-  test("Ex 3.17 List[Double]の各値をStringに変換する関数を記述せよ。d.toStringという式を使ってd: DoubleをStringに変換できる。") {
+  test(
+    "Ex 3.17 List[Double]の各値をStringに変換する関数を記述せよ。d.toStringという式を使ってd: DoubleをStringに変換できる。") {
     def doubleToString(l: List[Double]): List[String] =
-      List.foldRight(l, Nil:List[String])((a, b) => Cons(a.toString, b))
+      List.foldRight(l, Nil: List[String])((a, b) => Cons(a.toString, b))
 
     assert(doubleToString(List(1.0, 2.0, 3.0)) == List("1.0", "2.0", "3.0"))
   }
 
   test("Ex 3.18 リストの各要素を変更し、かつリストの構造をそのまま保つ総称関数mapを記述せよ。この関数のシグネチャは以下の通り。") {
     def map[A, B](as: List[A])(f: A => B): List[B] =
-      List.foldRight(as, Nil:List[B])((h, t) => Cons(f(h), t))
+      List.foldRight(as, Nil: List[B])((h, t) => Cons(f(h), t))
 
     assert(map(List(1, 2, 3))(_ + 1) == List(2, 3, 4))
     assert(map(List(5, 2, 4))(_.toString) == List("5", "2", "4"))
 
     //スタックオーバーフローを避けるにはfoldLeftを使ったバージョンにすべき
-    def map_1[A,B](l: List[A])(f: A => B): List[B] =
-      List.foldRightViaFoldLeft(l, Nil:List[B])((h,t) => Cons(f(h),t))
+    def map_1[A, B](l: List[A])(f: A => B): List[B] =
+      List.foldRightViaFoldLeft(l, Nil: List[B])((h, t) => Cons(f(h), t))
 
     //関数内でmutableない状態を使っても参照透過性は損なわれないため、問題ない
-    def map_2[A,B](l: List[A])(f: A => B): List[B] = {
+    def map_2[A, B](l: List[A])(f: A => B): List[B] = {
       val buf = new collection.mutable.ListBuffer[B]
       def go(l: List[A]): Unit = l match {
-        case Nil => ()
-        case Cons(h,t) => buf += f(h); go(t)
+        case Nil        => ()
+        case Cons(h, t) => buf += f(h); go(t)
       }
       go(l)
       List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
     }
   }
 
-  test("Ex 3.19 与えられた述語要件が満たされるまでリストから要素を削除するfilter関数を記述せよ。この関数を使ってList[Int]から奇数を全て削除せよ。") {
+  test(
+    "Ex 3.19 与えられた述語要件が満たされるまでリストから要素を削除するfilter関数を記述せよ。この関数を使ってList[Int]から奇数を全て削除せよ。") {
     def filter[A](as: List[A])(f: A => Boolean): List[A] =
-      List.foldRight(as, Nil: List[A])((h, z) => if(f(h)) Cons(h, z) else z)
+      List.foldRight(as, Nil: List[A])((h, z) => if (f(h)) Cons(h, z) else z)
 
     assert(filter(List(1, 2, 3, 4, 5))(_ % 2 == 0) == List(2, 4))
     assert(filter(List(24, 1, 43, 39, 9))(_ % 2 == 0) == List(24))
 
     //mapと同じでスタックオーバーフローを避けるバージョン
     def filter_1[A](l: List[A])(f: A => Boolean): List[A] =
-      List.foldRightViaFoldLeft(l, Nil:List[A])((h,t) => if (f(h)) Cons(h,t) else t)
+      List.foldRightViaFoldLeft(l, Nil: List[A])((h, t) =>
+        if (f(h)) Cons(h, t) else t)
 
     //mapと同じで、関数内部でmutableを使うのは問題ない
     def filter_2[A](l: List[A])(f: A => Boolean): List[A] = {
       val buf = new collection.mutable.ListBuffer[A]
       def go(l: List[A]): Unit = l match {
-        case Nil => ()
-        case Cons(h,t) => if (f(h)) buf += h; go(t)
+        case Nil        => ()
+        case Cons(h, t) => if (f(h)) buf += h; go(t)
       }
       go(l)
       List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
     }
   }
 
-  test("Ex 3.20 mapと同じような働きをするflatMap関数を記述せよ。この関数は単一の結果ではなくリストを返し、そのリストは最終的な結果のリストに挿入されなければならない。この関数のシグネチャは以下の通り。例えばflatMap(List(1, 2, 3))(i => List(i, i))はList(1, 1, 2, 2, 3, 3)になるはずである。") {
+  test(
+    "Ex 3.20 mapと同じような働きをするflatMap関数を記述せよ。この関数は単一の結果ではなくリストを返し、そのリストは最終的な結果のリストに挿入されなければならない。この関数のシグネチャは以下の通り。例えばflatMap(List(1, 2, 3))(i => List(i, i))はList(1, 1, 2, 2, 3, 3)になるはずである。") {
     //concatはflatten? mapしたものを平坦にするイメージ
     def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
       List.concat(List.map(as)(f))
@@ -372,32 +389,36 @@ class Test extends FunSuite {
 
   test("Ex 3.21 flatMapを使ってfilterを実装せよ。") {
     def filter[A, B](as: List[A])(f: A => Boolean): List[A] =
-      List.flatMap(as)(a => if(f(a)) List(a) else Nil)
+      List.flatMap(as)(a => if (f(a)) List(a) else Nil)
 
     assert(filter(List(1, 2, 3, 4, 5))(_ % 2 == 0) == List(2, 4))
   }
 
-  test("Ex 3.22 リストを2つ受取り、対応する要素同士を足し合わせて新しいリストを生成する関数を記述せよ。たとえばList(1, 2, 3)とList(4, 5, 6)はList(5, 7, 9)になる。") {
+  test(
+    "Ex 3.22 リストを2つ受取り、対応する要素同士を足し合わせて新しいリストを生成する関数を記述せよ。たとえばList(1, 2, 3)とList(4, 5, 6)はList(5, 7, 9)になる。") {
     def addPairwise(a: List[Int], b: List[Int]): List[Int] = (a, b) match {
-      case (Nil, _) => Nil
-      case (_, Nil) => Nil
-      case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1+h2, addPairwise(t1, t2))
+      case (Nil, _)                     => Nil
+      case (_, Nil)                     => Nil
+      case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, addPairwise(t1, t2))
     }
 
     assert(addPairwise(List(1, 2, 3), List(4, 5, 6)) == List(5, 7, 9))
   }
 
-  test("Ex 3.23 EXERCISE 3.22で作成した関数を、整数または加算に限定されないように一般化せよ。一般化された関数にはzipWithという名前をつけること。") {
-    def zipWith[A, B, C](a: List[A], b: List[B])(f: (A, B) => C): List[C] = (a, b) match {
-      case (Nil, _) => Nil
-      case (_, Nil) => Nil
-      case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
-    }
+  test(
+    "Ex 3.23 EXERCISE 3.22で作成した関数を、整数または加算に限定されないように一般化せよ。一般化された関数にはzipWithという名前をつけること。") {
+    def zipWith[A, B, C](a: List[A], b: List[B])(f: (A, B) => C): List[C] =
+      (a, b) match {
+        case (Nil, _)                     => Nil
+        case (_, Nil)                     => Nil
+        case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+      }
 
     assert(zipWith(List(1, 2, 3), List(4, 5, 6))(_ + _) == List(5, 7, 9))
   }
 
-  test("Ex 3.24 難問：例として、Listに別のListがサブシーケンスとして含まれているかどうかを調べるhasSubsequenceを実装せよ。たとえばList(1, 2, 3, 4)にはList(1, 2), List(2, 3), List(4)などがサブシーケンスとして含まれている。純粋関数型で、コンパクトで、かつ効率的な実装を見つけ出すのは難しいかもしれない。その場合は、それで構わない。どのようなものであれ、最も自然な関数を実装すること。この実装については、第5章であらためて取り上げ、改良する予定である。なおScalaでは、任意の値xおよびyに対し、x == yという式を使って等しいかどうかを比較できる。") {
+  test(
+    "Ex 3.24 難問：例として、Listに別のListがサブシーケンスとして含まれているかどうかを調べるhasSubsequenceを実装せよ。たとえばList(1, 2, 3, 4)にはList(1, 2), List(2, 3), List(4)などがサブシーケンスとして含まれている。純粋関数型で、コンパクトで、かつ効率的な実装を見つけ出すのは難しいかもしれない。その場合は、それで構わない。どのようなものであれ、最も自然な関数を実装すること。この実装については、第5章であらためて取り上げ、改良する予定である。なおScalaでは、任意の値xおよびyに対し、x == yという式を使って等しいかどうかを比較できる。") {
     //自分で実装バージョン
     def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean =
       sup match {
@@ -405,7 +426,8 @@ class Test extends FunSuite {
         case _ =>
           sub match {
             case Nil => true
-            case Cons(h, t) => hasSubsequence(List.dropWhile(sup)(a => a != h), t)
+            case Cons(h, t) =>
+              hasSubsequence(List.dropWhile(sup)(a => a != h), t)
           }
       }
 
@@ -416,21 +438,90 @@ class Test extends FunSuite {
 
     //公式解答バージョン
     @annotation.tailrec
-    def startsWith[A](l: List[A], prefix: List[A]): Boolean = (l,prefix) match {
-      case (_,Nil) => true
-      case (Cons(h,t),Cons(h2,t2)) if h == h2 => startsWith(t, t2)
-      case _ => false
-    }
+    def startsWith[A](l: List[A], prefix: List[A]): Boolean =
+      (l, prefix) match {
+        case (_, Nil)                              => true
+        case (Cons(h, t), Cons(h2, t2)) if h == h2 => startsWith(t, t2)
+        case _                                     => false
+      }
     @annotation.tailrec
     def hasSubsequence2[A](sup: List[A], sub: List[A]): Boolean = sup match {
-      case Nil => sub == Nil
+      case Nil                       => sub == Nil
       case _ if startsWith(sup, sub) => true
-      case Cons(h,t) => hasSubsequence2(t, sub)
+      case Cons(h, t)                => hasSubsequence2(t, sub)
     }
     assert(hasSubsequence2(List(1, 2, 3, 4), List(1, 2)))
     assert(hasSubsequence2(List(1, 2, 3, 4), List(2, 3)))
     assert(hasSubsequence2(List(1, 2, 3, 4), List(4)))
     assert(!hasSubsequence2(List(1, 2, 3, 4), List(3, 2)))
+  }
+
+  test("Ex 3.25 2分木のノード(LeafとBranch)の数を数えるsize関数を記述せよ。") {
+    def size[A](t: Tree[A]): Int = t match {
+      case Leaf(_)      => 1
+      case Branch(l, r) => 1 + size(l) + size(r)
+    }
+
+    assert(size(Leaf(1)) == 1)
+    assert(size(Branch(Leaf(1), Leaf(1))) == 3)
+    assert(size(Branch(Leaf(1), Branch(Leaf(1), Leaf(1)))) == 5)
+  }
+
+  test(
+    "Ex 3.26 Tree[Int]の最大の要素を返すmaximum関数を記述せよ。なおScalaでは、x.max(y) または x max y を使って2つの整数xとyの最大値を計算できる。") {
+    def maximum(t: Tree[Int]): Int = t match {
+      case Leaf(x)      => x
+      case Branch(l, r) => maximum(l).max(maximum(r))
+    }
+
+    assert(maximum(Leaf(1)) == 1)
+    assert(maximum(Branch(Leaf(2), Leaf(1))) == 2)
+    assert(maximum(Branch(Leaf(2), Branch(Leaf(1), Leaf(3)))) == 3)
+  }
+
+  test("Ex 3.27 2分木のルートから任意のLeafまでの最長パスを返すdepth関数を記述せよ。") {
+    def depth[A](t: Tree[A]): Int = t match {
+      case Leaf(_)      => 0
+      case Branch(l, r) => 1 + (depth(l) max depth(r))
+    }
+    assert(depth(Leaf(1)) == 0)
+    assert(depth(Branch(Leaf(2), Leaf(1))) == 1)
+    assert(depth(Branch(Leaf(2), Branch(Leaf(1), Leaf(3)))) == 2)
+  }
+
+  test("Ex 3.28 2分木の各要素を特定の関数を使って変更するmap関数を記述せよ。この関数はListの同じ名前のメソッドに類似している。") {
+    def map[A, B](t: Tree[A])(f: A => B): Tree[B] = t match {
+      case Leaf(x)      => Leaf(f(x))
+      case Branch(l, r) => Branch(map(l)(f), map(r)(f))
+    }
+    assert(map(Leaf(1))(_ * 2) == Leaf(2))
+    assert(map(Branch(Leaf(2), Leaf(1)))(_ * 2) == Branch(Leaf(4), Leaf(2)))
+    assert(
+      map(Branch(Leaf(2), Branch(Leaf(1), Leaf(3))))(_ * 2) == Branch(
+        Leaf(4),
+        Branch(Leaf(2), Leaf(6))))
+  }
+
+  test(
+    "Ex 3.29 size, maximum, depth, mapを一般化し、それらの類似点を抽象化する新しいfold関数を記述せよ。そして、このより汎用的なfold関数を使ってそれらを再実装せよ。このfold関数とListの左畳み込みおよび右畳み込みの間にある類似性を抽出することは可能か。") {
+    def fold[A, B](t: Tree[A])(f: A => B)(g: (B, B) => B): B = t match {
+      case Leaf(a)      => f(a)
+      case Branch(l, r) => g(fold(l)(f)(g), fold(r)(f)(g))
+    }
+
+    //TODO
+    def sizeViaFold[A](t: Tree[A]): Int =
+      fold(t)(a => 1)(1 + _ + _)
+
+    def maximumViaFold(t: Tree[Int]): Int =
+      fold(t)(a => a)(_ max _)
+
+    def depthViaFold[A](t: Tree[A]): Int =
+      fold(t)(a => 0)((l, r) => 1 + (l max r))
+
+    //TODO
+    def mapViaFild[A, B](t: Tree[A])(f: A => B): Tree[B] =
+      fold(t)(a => Leaf(f(a)): Tree[B])(Branch(_, _)) //型アノテーションが必要。本家のanswerのコメント参照
   }
 
 }
