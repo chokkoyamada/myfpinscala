@@ -15,6 +15,19 @@ object RNG {
     }
   }
 
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i, r) = rng.nextInt
+    (if (i < 0) -(i + 1) else i, r)
+  }
+
+  def double(rng: RNG): (Double, RNG) = {
+    val (i, r) = nonNegativeInt(rng)
+    (i / (Int.MaxValue.toDouble + 1), r)
+  }
+
+  def boolean(rng: RNG): (Boolean, RNG) =
+    rng.nextInt match {case (i, rng2) => (i%2 == 0, rng2)}
+
   type Rand[+A] = RNG => (A, RNG)
 
   val int: Rand[Int] = _.nextInt
@@ -44,7 +57,7 @@ object RNG {
   def both[B, C](ra: Rand[B], rb: Rand[C]): Rand[(B, C)] =
     map2(ra, rb)((_, _))
 
-  def sequence[A](fs: List[Rand[A]]): Rand[List[A ]] =
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
     fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
 
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
@@ -55,6 +68,7 @@ object RNG {
         val (x, r2) = r.nextInt
         go(count - 1, r2, x :: xs)
       }
+
     go(count, rng, List())
   }
 }

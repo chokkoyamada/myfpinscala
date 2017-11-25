@@ -1,4 +1,4 @@
-package fpinscala.chapter_02
+package fpinscala.chapter02
 
 import org.scalatest.FunSuite
 

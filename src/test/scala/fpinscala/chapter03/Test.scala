@@ -1,10 +1,10 @@
-package fpinscala.chapter_03
+package fpinscala.chapter03
 
 import org.scalatest.FunSuite
 
 class Test extends FunSuite {
 
-  import fpinscala.datastructures._
+  import fpinscala.chapter03._
 
   test("Ex 3.1 次のマッチ式はどのような結果になるか。") {
 

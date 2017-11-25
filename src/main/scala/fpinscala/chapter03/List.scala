@@ -1,4 +1,4 @@
-package fpinscala.datastructures
+package fpinscala.chapter03
 
 sealed trait List[+A]
 
