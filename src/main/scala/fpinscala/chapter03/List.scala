@@ -41,5 +41,8 @@ object List {
 
   def reverse[A](ns: List[A]): List[A] =
     foldLeft(ns, List[A]())((z, n) => Cons(n, z))
+
+  def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
+    List.foldRight(l, r)((a, b) => Cons(a, b)) //foldRightならできる。foldLeftはできない。
 }
 

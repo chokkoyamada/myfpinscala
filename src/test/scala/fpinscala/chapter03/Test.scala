@@ -252,8 +252,8 @@ class Test extends FunSuite {
 
   test("Ex 3.12 要素が逆に並んだリストを返す関数を記述せよ。List(1, 2, 3)が与えられた場合、この関数はList(3, 2, 1)を返す。畳み込みを使って記述できるかどうかを確認すること。") {
     //素直に実装したバージョン
-    def reverse(ns: List[Int]): List[Int] = {
-      def go(ns: List[Int], l: List[Int]): List[Int] =
+    def reverse[A](ns: List[A]): List[A] = {
+      def go(ns: List[A], l: List[A]): List[A] =
         ns match {
           case Nil => l
           case Cons(h, t) => go(t, Cons(h, l))
@@ -265,8 +265,8 @@ class Test extends FunSuite {
     assert(reverse(List(5, 3, 6, 9, 0)) == List(0, 9, 6, 3, 5))
 
     //foldLeftによる畳込みを使って記述したバージョン
-    def reverse2(ns: List[Int]): List[Int] =
-      List.foldLeft(ns, List[Int]())((z, n) => Cons(n, z))
+    def reverse2[A](ns: List[A]): List[A] =
+      List.foldLeft(ns, List[A]())((z, n) => Cons(n, z))
 
     assert(reverse2(List(1, 2, 3)) == List(3, 2, 1))
     assert(reverse2(List(5, 3, 6, 9, 0)) == List(0, 9, 6, 3, 5))
@@ -289,15 +289,32 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.14 foldLeftまたはfoldRightをベースとしてappendを実装せよ。") {
-    def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
+    def append[A](l: List[A], r: List[A]): List[A] =
       List.foldRight(l, r)((a, b) => Cons(a, b)) //foldRightならできる。foldLeftはできない。
 
-    appendViaFoldRight(List(1, 2, 3), List(4, 5, 6)) == List(1, 2, 3, 4, 5, 6)
+    append(List(1, 2, 3), List(4, 5, 6)) == List(1, 2, 3, 4, 5, 6)
 
   }
 
   test("Ex 3.15 難問：複数のリストからなるリストを1つのリストとして連結する関数を記述せよ。この関数の実行時間はすべてのリストの長さの合計に対して線形になるはずである。すでに定義した関数を使ってみること。") {
+    def concat[A](l: List[List[A]]): List[A] =
+      List.foldRight(l, List[A]())(List.appendViaFoldRight)
 
+    assert(concat(List(List(1, 2), List(3, 4, 5))) == List(1, 2, 3, 4, 5))
+  }
+
+  test("Ex 3.16 各要素に1を足すことで整数のリストを変換する関数を記述せよ。注意：これは新しいListを返す純粋関数に鳴るはずである。") {
+    def add(l: List[Int]): List[Int] = List.foldRight(l, Nil:List[Int])((h, t) => Cons(h+1, t))
+    //def add2(l: List[Int]): List[Int] = List.foldLeft(l, Nil:List[Int])((t, h) => Cons(h+1, t)) 逆になってしまうのでこれはできない
+
+    assert(add(List(1, 2, 3)) == List(2, 3, 4))
+  }
+
+  test("Ex 3.17 List[Double]の各値をStringに変換する関数を記述せよ。d.toStringという式を使ってd: DoubleをStringに変換できる。") {
+    def doubleToString(l: List[Double]): List[String] =
+      List.foldRight(l, Nil:List[String])((a, b) => Cons(a.toString, b))
+
+    assert(doubleToString(List(1.0, 2.0, 3.0)) == List("1.0", "2.0", "3.0"))
   }
 
 }
