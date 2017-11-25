@@ -3,23 +3,26 @@ package fpinscala.chapter02
 import org.scalatest.FunSuite
 
 class Test extends FunSuite {
+
   test("Ex 2.1 n番目のフィボナッチ数を種痘する再帰関数を記述せよ。再帰関数の定義では、ローカルな末尾再帰関数を使用すること。") {
+    // https://oeis.org/A000045
+    // Fibonacci numbers: F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1.
+    // 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...
     def fib(n: Int): Int = {
       n match {
         case 0 => 0
-        case 1 => 0
-        case 2 => 1
+        case 1 => 1
         case _ => fib(n - 2) + fib(n - 1)
       }
     }
 
-    assert(fib(1) == 0)
+    assert(fib(0) == 0)
+    assert(fib(1) == 1)
     assert(fib(2) == 1)
-    assert(fib(3) == 1)
-    assert(fib(4) == 2)
-    assert(fib(5) == 3)
-    assert(fib(6) == 5)
-    assert(fib(7) == 8)
+    assert(fib(3) == 2)
+    assert(fib(4) == 3)
+    assert(fib(5) == 5)
+    assert(fib(6) == 8)
   }
 
   test("Ex 2.2 指定された比較関数に従ってArray[A]がソートされているかどうかを調べるisSortedを実装せよ。") {
