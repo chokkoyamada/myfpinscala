@@ -44,18 +44,43 @@ class Test extends FunSuite {
     def curry[A, B, C](f: (A, B) => C): A => (B => C) = {
       (a: A) => (b: B) => f(a, b)
     }
+    val f = (a: Int, b: Int) => 3 * a + 2 * b
+    assert(f(3, 2) == curry(f)(3)(2))
+    /* REPLでのサンプル
+    scala> val f = curry((a: Int, b: Int) => 3*a + 2*b)
+    f: Int => (Int => Int) = <function1>
+
+    scala> val g = f(2)
+    g: Int => Int = <function1>
+
+    scala> g(3)
+    res2: Int = 12
+    //3*2+2*3=12
+     */
   }
 
   test("Ex 2.4 curryによる変換を逆向きに行うuncurryを実装せよ。=>は右結合であるため、A => (B => C)はA => B => Cと記述できる。") {
     def uncurry[A, B, C](f: A => B => C): (A, B) => C = {
       (a: A, b: B) => f(a)(b)
     }
+    val f = (a: Int) => (b: Int) => 3 * a + 2 * b
+    assert(f(3)(2) == uncurry(f)(3, 2))
   }
 
   test("Ex 2.5 2つの関数を合成する高階関数を実装せよ。") {
+    // `a`はどこから来たのか？
+    // ->関数を定義するので、aは他の文字でもよい。関数の中で使う識別子。
     def compose[A, B, C](f: B => C, g: A => B): A => C = {
       (a: A) => f(g(a))
     }
+    val f = (a: Int) => a + 1
+    val g = (b: Int) => b * 2
+    val h = {
+      val i = f(1)
+      val j = g(i)
+      j
+    }
+    assert(h == compose(g, f)(1)) //この順番になる。fを適用してからgとしたいならandThenを使う
   }
 
 }
