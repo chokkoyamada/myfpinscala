@@ -273,19 +273,18 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.13 難問：foldRightをベースとして、foldLeftを記述することは可能か。その逆はどうか。foldLeftを使ってfoldRightを実装すると、foldRightを末尾再帰的に実装がすることが可能となり、大きなリストでもスタックオーバーフローが発生しなくなるので便利である。") {
-    def foldLeftViaFoldRight[A, B](ns: List[A], z: B)(f: (A, B) => B): B =
-      List.foldLeft(List.reverse(ns), z)((b, a) => f(a, b))
+    def foldLeftViaFoldRight[A,B](l: List[A], z: B)(f: (B,A) => B): B =
+      List.foldRight(l, (b:B) => b)((a,g) => b => g(f(b,a)))(z)
 
     assert(List.foldLeft(List(1, 2, 3, 4, 5), 0)(_ + _) == foldLeftViaFoldRight(List(1, 2, 3, 4, 5), 0)(_ + _))
 
     //TODO 分からない。あとで見返す
-    def foldLeftViaFoldRight2[A, B](ns: List[A], z: B)(f: (A, B) => B): B =
-      List.foldLeft(ns, (b: B) => b)((g, a) => b => g(f(a, b)))(z)
+    def foldRightViaFoldLeft[A,B](l: List[A], z: B)(f: (A,B) => B): B =
+      List.foldLeft(List.reverse(l), z)((b,a) => f(a,b))
 
     //TODO 分からない。あとで見返す
-    def foldRightViaFoldLeft[A, B](ns: List[A], z: B)(f: (B, A) => B): B =
-      List.foldRight(ns, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
-
+    def foldRightViaFoldLeft_1[A,B](l: List[A], z: B)(f: (A,B) => B): B =
+      List.foldLeft(l, (b:B) => b)((g,a) => b => g(f(a,b)))(z)
   }
 
   test("Ex 3.14 foldLeftまたはfoldRightをベースとしてappendを実装せよ。") {
@@ -315,6 +314,123 @@ class Test extends FunSuite {
       List.foldRight(l, Nil:List[String])((a, b) => Cons(a.toString, b))
 
     assert(doubleToString(List(1.0, 2.0, 3.0)) == List("1.0", "2.0", "3.0"))
+  }
+
+  test("Ex 3.18 リストの各要素を変更し、かつリストの構造をそのまま保つ総称関数mapを記述せよ。この関数のシグネチャは以下の通り。") {
+    def map[A, B](as: List[A])(f: A => B): List[B] =
+      List.foldRight(as, Nil:List[B])((h, t) => Cons(f(h), t))
+
+    assert(map(List(1, 2, 3))(_ + 1) == List(2, 3, 4))
+    assert(map(List(5, 2, 4))(_.toString) == List("5", "2", "4"))
+
+    //スタックオーバーフローを避けるにはfoldLeftを使ったバージョンにすべき
+    def map_1[A,B](l: List[A])(f: A => B): List[B] =
+      List.foldRightViaFoldLeft(l, Nil:List[B])((h,t) => Cons(f(h),t))
+
+    //関数内でmutableない状態を使っても参照透過性は損なわれないため、問題ない
+    def map_2[A,B](l: List[A])(f: A => B): List[B] = {
+      val buf = new collection.mutable.ListBuffer[B]
+      def go(l: List[A]): Unit = l match {
+        case Nil => ()
+        case Cons(h,t) => buf += f(h); go(t)
+      }
+      go(l)
+      List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
+    }
+  }
+
+  test("Ex 3.19 与えられた述語要件が満たされるまでリストから要素を削除するfilter関数を記述せよ。この関数を使ってList[Int]から奇数を全て削除せよ。") {
+    def filter[A](as: List[A])(f: A => Boolean): List[A] =
+      List.foldRight(as, Nil: List[A])((h, z) => if(f(h)) Cons(h, z) else z)
+
+    assert(filter(List(1, 2, 3, 4, 5))(_ % 2 == 0) == List(2, 4))
+    assert(filter(List(24, 1, 43, 39, 9))(_ % 2 == 0) == List(24))
+
+    //mapと同じでスタックオーバーフローを避けるバージョン
+    def filter_1[A](l: List[A])(f: A => Boolean): List[A] =
+      List.foldRightViaFoldLeft(l, Nil:List[A])((h,t) => if (f(h)) Cons(h,t) else t)
+
+    //mapと同じで、関数内部でmutableを使うのは問題ない
+    def filter_2[A](l: List[A])(f: A => Boolean): List[A] = {
+      val buf = new collection.mutable.ListBuffer[A]
+      def go(l: List[A]): Unit = l match {
+        case Nil => ()
+        case Cons(h,t) => if (f(h)) buf += h; go(t)
+      }
+      go(l)
+      List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
+    }
+  }
+
+  test("Ex 3.20 mapと同じような働きをするflatMap関数を記述せよ。この関数は単一の結果ではなくリストを返し、そのリストは最終的な結果のリストに挿入されなければならない。この関数のシグネチャは以下の通り。例えばflatMap(List(1, 2, 3))(i => List(i, i))はList(1, 1, 2, 2, 3, 3)になるはずである。") {
+    //concatはflatten? mapしたものを平坦にするイメージ
+    def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
+      List.concat(List.map(as)(f))
+
+    assert(flatMap(List(1, 2, 3))(i => List(i, i)) == List(1, 1, 2, 2, 3, 3))
+  }
+
+  test("Ex 3.21 flatMapを使ってfilterを実装せよ。") {
+    def filter[A, B](as: List[A])(f: A => Boolean): List[A] =
+      List.flatMap(as)(a => if(f(a)) List(a) else Nil)
+
+    assert(filter(List(1, 2, 3, 4, 5))(_ % 2 == 0) == List(2, 4))
+  }
+
+  test("Ex 3.22 リストを2つ受取り、対応する要素同士を足し合わせて新しいリストを生成する関数を記述せよ。たとえばList(1, 2, 3)とList(4, 5, 6)はList(5, 7, 9)になる。") {
+    def addPairwise(a: List[Int], b: List[Int]): List[Int] = (a, b) match {
+      case (Nil, _) => Nil
+      case (_, Nil) => Nil
+      case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1+h2, addPairwise(t1, t2))
+    }
+
+    assert(addPairwise(List(1, 2, 3), List(4, 5, 6)) == List(5, 7, 9))
+  }
+
+  test("Ex 3.23 EXERCISE 3.22で作成した関数を、整数または加算に限定されないように一般化せよ。一般化された関数にはzipWithという名前をつけること。") {
+    def zipWith[A, B, C](a: List[A], b: List[B])(f: (A, B) => C): List[C] = (a, b) match {
+      case (Nil, _) => Nil
+      case (_, Nil) => Nil
+      case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+    }
+
+    assert(zipWith(List(1, 2, 3), List(4, 5, 6))(_ + _) == List(5, 7, 9))
+  }
+
+  test("Ex 3.24 難問：例として、Listに別のListがサブシーケンスとして含まれているかどうかを調べるhasSubsequenceを実装せよ。たとえばList(1, 2, 3, 4)にはList(1, 2), List(2, 3), List(4)などがサブシーケンスとして含まれている。純粋関数型で、コンパクトで、かつ効率的な実装を見つけ出すのは難しいかもしれない。その場合は、それで構わない。どのようなものであれ、最も自然な関数を実装すること。この実装については、第5章であらためて取り上げ、改良する予定である。なおScalaでは、任意の値xおよびyに対し、x == yという式を使って等しいかどうかを比較できる。") {
+    //自分で実装バージョン
+    def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean =
+      sup match {
+        case Nil => false
+        case _ =>
+          sub match {
+            case Nil => true
+            case Cons(h, t) => hasSubsequence(List.dropWhile(sup)(a => a != h), t)
+          }
+      }
+
+    assert(hasSubsequence(List(1, 2, 3, 4), List(1, 2)))
+    assert(hasSubsequence(List(1, 2, 3, 4), List(2, 3)))
+    assert(hasSubsequence(List(1, 2, 3, 4), List(4)))
+    assert(!hasSubsequence(List(1, 2, 3, 4), List(3, 2)))
+
+    //公式解答バージョン
+    @annotation.tailrec
+    def startsWith[A](l: List[A], prefix: List[A]): Boolean = (l,prefix) match {
+      case (_,Nil) => true
+      case (Cons(h,t),Cons(h2,t2)) if h == h2 => startsWith(t, t2)
+      case _ => false
+    }
+    @annotation.tailrec
+    def hasSubsequence2[A](sup: List[A], sub: List[A]): Boolean = sup match {
+      case Nil => sub == Nil
+      case _ if startsWith(sup, sub) => true
+      case Cons(h,t) => hasSubsequence2(t, sub)
+    }
+    assert(hasSubsequence2(List(1, 2, 3, 4), List(1, 2)))
+    assert(hasSubsequence2(List(1, 2, 3, 4), List(2, 3)))
+    assert(hasSubsequence2(List(1, 2, 3, 4), List(4)))
+    assert(!hasSubsequence2(List(1, 2, 3, 4), List(3, 2)))
   }
 
 }

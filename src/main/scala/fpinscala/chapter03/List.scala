@@ -43,6 +43,25 @@ object List {
     foldLeft(ns, List[A]())((z, n) => Cons(n, z))
 
   def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
-    List.foldRight(l, r)((a, b) => Cons(a, b)) //foldRightならできる。foldLeftはできない。
+    foldRight(l, r)((a, b) => Cons(a, b)) //foldRightならできる。foldLeftはできない。
+
+  def foldRightViaFoldLeft[A,B](l: List[A], z: B)(f: (A,B) => B): B =
+    foldLeft(reverse(l), z)((b,a) => f(a,b))
+
+  def concat[A](l: List[List[A]]): List[A] =
+    List.foldRight(l, List[A]())(List.appendViaFoldRight)
+
+  def map[A, B](as: List[A])(f: A => B): List[B] =
+    List.foldRight(as, Nil:List[B])((h, t) => Cons(f(h), t))
+
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
+    List.concat(List.map(as)(f))
+
+  def dropWhile[A](as: List[A])(f: A => Boolean): List[A] =
+    as match {
+      case Nil => Nil
+      case Cons(h, t) if f(h) => dropWhile(t)(f)
+      case Cons(h, t) => Cons(h, t)
+    }
 }
 
