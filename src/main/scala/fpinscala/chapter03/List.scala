@@ -22,17 +22,24 @@ object List {
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
 
+  def sum2(ns: List[Int]): Int =
+    foldRight(ns, 0)((x, y) => x + y)
+
+  def product2(ns: List[Double]): Double =
+    foldRight(ns, 1.0)(_ * _)
+
   //foldRightは右から畳み込む、つまりconsのtail
   def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = as match {
     case Nil => z
     case Cons(x, xs) => f(x, foldRight(xs, z)(f))
   }
 
-  def sum2(ns: List[Int]): Int =
-    foldRight(ns, 0)((x, y) => x + y)
+  def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = as match {
+    case Nil => z
+    case Cons(h, t) => foldLeft(t, f(z, h))(f)
+  }
 
-  def product2(ns: List[Double]) =
-    foldRight(ns, 1.0)(_ * _)
-
+  def reverse[A](ns: List[A]): List[A] =
+    foldLeft(ns, List[A]())((z, n) => Cons(n, z))
 }
 

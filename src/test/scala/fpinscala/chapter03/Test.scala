@@ -4,8 +4,6 @@ import org.scalatest.FunSuite
 
 class Test extends FunSuite {
 
-  import fpinscala.chapter03._
-
   test("Ex 3.1 次のマッチ式はどのような結果になるか。") {
 
     val sut = List(1, 2, 3, 4, 5) match {
@@ -20,14 +18,13 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.2 Listの最初の要素を削除する関数tailを実装せよ。") {
-
+    //Consでheadとtailに分割してtailを返せばよい
     def tail[A](l: List[A]): List[A] = l match {
       case Nil => Nil
       case Cons(_, t) => t
     }
 
     assert(tail(List(1, 2, 3, 4, 5)) == List(2, 3, 4, 5))
-
   }
 
   test("Ex 3.3 Listの最初の要素を別の値と置き換えるsetHead関数を実装せよ。") {
@@ -41,6 +38,7 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.4 リストの先頭からn個の要素を削除するdropという関数を実装せよ。") {
+    // tailをn回繰り返すと考える
     def drop[A](as: List[A], n: Int): List[A] =
       if (n > 0) {
         as match {
@@ -54,13 +52,13 @@ class Test extends FunSuite {
   }
 
   test("Ex 3.5 述語とマッチする場合に限り、Listからその要素までを削除するdropWhileを実装せよ。") {
-    def dropWhile[A](as: List[A])(f: A => Boolean): List[A] = {
+    def dropWhile[A](as: List[A])(f: A => Boolean): List[A] =
+      // tailをrecursionで適用する
       as match {
         case Nil => Nil
         case Cons(h, t) if f(h) => dropWhile(t)(f)
         case Cons(h, t) => Cons(h, t)
       }
-    }
 
     assert(dropWhile(List(1, 2, 3, 4, 5))(x => x < 3) == List(3, 4, 5))
   }
@@ -70,7 +68,7 @@ class Test extends FunSuite {
       l match {
         case Nil => sys.error("init of Nil")
         case Cons(_, Nil) => Nil
-        case Cons(h, t) => Cons(h, init(t))
+        case Cons(h, t) => Cons(h, init(t)) //末尾再帰にはなっていない（できない）
       }
 
     /*
@@ -96,7 +94,7 @@ class Test extends FunSuite {
       def go(cur: List[A]): List[A] = cur match {
         case Nil => sys.error("init of Nil")
         case Cons(h, Nil) => List(buf.toList: _*)
-        case Cons(h, t) => buf += h; go(t)
+        case Cons(h, t) => buf += h; go(t) //末尾再帰
       }
 
       go(l)
@@ -183,7 +181,7 @@ class Test extends FunSuite {
      */
   }
 
-  test("Ex. 3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
+  test("Ex 3.8 foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_._))のように、NilおよびCons自体をfoldRightに渡した場合はどうなるか。これがfoldRightとListのデータコンストラクタとの関係について何を表していると思うか。") {
     assert(List.foldRight(List(1, 2, 3), Nil: List[Int])(Cons(_, _)) === Cons(1, Cons(2, Cons(3, Nil))))
     /*
     f(x, foldRight((xs, z)(f))
@@ -192,10 +190,12 @@ class Test extends FunSuite {
     Cons(x, Cons(x, Cons(x, foldRight(xs, z)(Cons(_,_))))
     ...
     となる。
+    foldRightはListのデータコンストラクタの実装と同じである。
      */
   }
 
   test("Ex 3.9 foldRightを使ってリストの長さを計算せよ。") {
+    //素直に実装したバージョン
     def length[A](as: List[A]): Int = {
       def go(n: Int, l: List[A]): Int = l match {
         case Nil => n
@@ -208,13 +208,96 @@ class Test extends FunSuite {
     assert(length(List(1, 2, 3, 4, 5)) == 5)
     assert(length(List("a", "b", "c")) == 3)
     assert(length(Nil) == 0)
+
+    //foldRightを使うバージョン
+    def length2[A](as: List[A]): Int =
+      List.foldRight(as, 0)((_, b) => b + 1)
+
+    assert(length2(List(1, 2, 3, 4, 5)) == 5)
+    assert(length2(List("a", "b", "c")) == 3)
+    assert(length2(Nil) == 0)
   }
 
   test("Ex 3.10 前章で説明した手法を使って、リスト再帰の総称関数foldLeftを記述せよ。") {
     //foldLeftは左からたたみこむ、つまりConsのhead要素に対して関数を適用していく。
     def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = as match {
       case Nil => z
-      case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+      case Cons(h, t) => foldLeft(t, f(z, h))(f)
     }
+
+    assert(foldLeft(List(3, 4, 5), 1)((a: Int, b: Int) => a + b) == 13)
+    assert(foldLeft(List(3, 4, 5), 1)(_ + _) == 13) //カリー化されていて型推論できるためこのようにも書ける
+    // foldLeft(List(4, 5), f(1, 3)((a: Int, b: Int) => a + b)
+    // foldLeft(List(5), f(4, 4)((a: Int, b: Int) => a + b)
+    // foldLeft(Nil, f(5, 8)((a: Int, b: Int) => a + b)
+    // 13
   }
+
+  test("Ex 3.11 foldLeftを使ってsum, product, およびリストの長さを計算する関数を記述せよ。") {
+    def sum(ns: List[Int]): Int =
+      List.foldLeft(ns, 0)(_ + _)
+
+    assert(sum(List(1, 2, 3, 4)) == 10)
+
+    def product(ns: List[Int]): Int =
+      List.foldLeft(ns, 1)(_ * _)
+
+    assert(product(List(1, 2, 3, 4)) == 24)
+
+    def length(ns: List[Int]): Int =
+      List.foldLeft(ns, 0)((z, _) => z + 1) //zを足し上げていくだけ
+
+    assert(length(List(1, 2, 3, 4)) == 4)
+  }
+
+  test("Ex 3.12 要素が逆に並んだリストを返す関数を記述せよ。List(1, 2, 3)が与えられた場合、この関数はList(3, 2, 1)を返す。畳み込みを使って記述できるかどうかを確認すること。") {
+    //素直に実装したバージョン
+    def reverse(ns: List[Int]): List[Int] = {
+      def go(ns: List[Int], l: List[Int]): List[Int] =
+        ns match {
+          case Nil => l
+          case Cons(h, t) => go(t, Cons(h, l))
+        }
+
+      go(ns, Nil)
+    }
+    assert(reverse(List(1, 2, 3)) == List(3, 2, 1))
+    assert(reverse(List(5, 3, 6, 9, 0)) == List(0, 9, 6, 3, 5))
+
+    //foldLeftによる畳込みを使って記述したバージョン
+    def reverse2(ns: List[Int]): List[Int] =
+      List.foldLeft(ns, List[Int]())((z, n) => Cons(n, z))
+
+    assert(reverse2(List(1, 2, 3)) == List(3, 2, 1))
+    assert(reverse2(List(5, 3, 6, 9, 0)) == List(0, 9, 6, 3, 5))
+  }
+
+  test("Ex 3.13 難問：foldRightをベースとして、foldLeftを記述することは可能か。その逆はどうか。foldLeftを使ってfoldRightを実装すると、foldRightを末尾再帰的に実装がすることが可能となり、大きなリストでもスタックオーバーフローが発生しなくなるので便利である。") {
+    def foldLeftViaFoldRight[A, B](ns: List[A], z: B)(f: (A, B) => B): B =
+      List.foldLeft(List.reverse(ns), z)((b, a) => f(a, b))
+
+    assert(List.foldLeft(List(1, 2, 3, 4, 5), 0)(_ + _) == foldLeftViaFoldRight(List(1, 2, 3, 4, 5), 0)(_ + _))
+
+    //TODO 分からない。あとで見返す
+    def foldLeftViaFoldRight2[A, B](ns: List[A], z: B)(f: (A, B) => B): B =
+      List.foldLeft(ns, (b: B) => b)((g, a) => b => g(f(a, b)))(z)
+
+    //TODO 分からない。あとで見返す
+    def foldRightViaFoldLeft[A, B](ns: List[A], z: B)(f: (B, A) => B): B =
+      List.foldRight(ns, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
+
+  }
+
+  test("Ex 3.14 foldLeftまたはfoldRightをベースとしてappendを実装せよ。") {
+    def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
+      List.foldRight(l, r)((a, b) => Cons(a, b)) //foldRightならできる。foldLeftはできない。
+
+    appendViaFoldRight(List(1, 2, 3), List(4, 5, 6)) == List(1, 2, 3, 4, 5, 6)
+
+  }
+
+  test("Ex 3.15 難問：複数のリストからなるリストを1つのリストとして連結する関数を記述せよ。この関数の実行時間はすべてのリストの長さの合計に対して線形になるはずである。すでに定義した関数を使ってみること。") {
+
+  }
+
 }
