@@ -22,43 +22,59 @@ class StateTest extends FunSuite with Matchers {
     "EX 6.1 RNG.nextIntを使って0~Int.maxValue(0とInt.maxValueを含む)のランダムな整数を生成する関数を記述せよ。なお、nextIntがInt.minValueを返すときには、対応する自然数がない。この特異なケースにも対処する必要がある。") {
     def nonNegativeInt(rng: RNG): (Int, RNG) = {
       val (a, b) = rng.nextInt
-      if (a < 0) (-a + 1, b) else (a, b)
+      (if (a < 0) -(a + 1) else a, b) //+1することでInt.minValueのケースに対応している
     }
+    val rng = SimpleRNG(42)
+    assert(nonNegativeInt(rng) == (16159453, SimpleRNG(1059025964525L)))
+    val (_, rng2) = rng.nextInt
+    assert(nonNegativeInt(rng2) == (1281479696, SimpleRNG(197491923327988L)))
   }
 
   test(
     "Ex 6.2 0~1(1を含まない)のDouble型の値を生成する関数を記述せよ。Int.MaxValueを使って正の整数の最大値を取得できることと、x.toDoubleを使ってx: IntをDoubleに変換できることに注意。") {
     def double(rng: RNG): (Double, RNG) = {
-      val (a, b) = rng.nextInt
-      ((a / Int.MaxValue).toDouble, b)
+      val (a, r) = nonNegativeInt(rng)
+      (a / Int.MaxValue.toDouble + 1, r)
     }
+
+    val rng = SimpleRNG(10000)
+    assert(double(rng) == (1.2083733185233423, SimpleRNG(252149039170011L)))
   }
 
   test(
     "Ex 6.3 ペア(Int, Double) ペア(Double, Int), および三要素のタプル(Double, Double, Double)を生成する関数を記述せよ。すでに作成済みの関数を再利用できるはずだ。") {
-    def double(rng: RNG): (Double, RNG) = {
-      val (a, b) = rng.nextInt
-      ((a / Int.MaxValue).toDouble, b)
-    }
+    val rng = SimpleRNG(42)
 
     def intDouble(rng: RNG): ((Int, Double), RNG) = {
-      val (a, b) = rng.nextInt
-      val (c, d) = double(b)
-      ((a, c), d)
+      val (i, rng1) = rng.nextInt
+      val (d, rng2) = double(rng1)
+      ((i, d), rng2)
     }
+
+    assert(
+      intDouble(rng) == ((16159453, 0.5967354848980904), SimpleRNG(
+        197491923327988L)))
 
     def doubleInt(rng: RNG): ((Double, Int), RNG) = {
-      val (a, b) = double(rng)
-      val (c, d) = b.nextInt
-      ((a, c), d)
+      val (d, rng1) = double(rng)
+      val (i, rng2) = rng1.nextInt
+      ((d, i), rng2)
     }
 
+    assert(
+      doubleInt(rng) == ((0.007524831686168909, -1281479697), SimpleRNG(
+        197491923327988L)))
+
     def double3(rng: RNG): ((Double, Double, Double), RNG) = {
-      val (a, b) = double(rng)
-      val (c, d) = double(b)
-      val (e, f) = double(d)
-      ((a, c, e), f)
+      val (d1, rng1) = double(rng)
+      val (d2, rng2) = double(rng1)
+      val (d3, rng3) = double(rng2)
+      ((d1, d2, d3), rng3)
     }
+    assert(
+      double3(rng) == ((0.007524831686168909,
+                        0.5967354848980904,
+                        0.15846728393808007), SimpleRNG(259172689157871L)))
   }
 
   test("Ex 6.4 ランダムな整数のリストを生成する関数を記述せよ。") {
@@ -76,18 +92,26 @@ class StateTest extends FunSuite with Matchers {
         (l.toList, r)
       }
     }
+
+    val rng = SimpleRNG(42)
+    assert(
+      ints(5)(rng) == (List(16159453,
+                            -1281479697,
+                            -340305902,
+                            -2015756020,
+                            1770001318), SimpleRNG(115998806404289L)))
   }
 
   test("Ex 6.5 mapを使ってdoubleをもう少し要領よく実装しなおせ。Ex 6.2を参照。") {
-    def nonNegativeInt(rng: RNG): (Int, RNG) = {
-      val (a, b) = rng.nextInt
-      if (a < 0) (-a + 1, b) else (a, b)
-    }
-
     def double(rng: RNG): Rand[Double] = {
-      map(nonNegativeInt)(i => (i / Int.MaxValue).toDouble)
+      map(nonNegativeInt)(_ / Int.MaxValue.toDouble + 1)
     }
 
+    val rng = SimpleRNG(10000)
+    assert(
+      double(rng).apply(rng) == (1.2083733185233423, SimpleRNG(
+        252149039170011L)))
+    //なぜapplyしなおさないと値が取れないのか？
   }
 
   test(
@@ -101,13 +125,27 @@ class StateTest extends FunSuite with Matchers {
         }
     }
 
-    def map2_[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+    val rng: SimpleRNG = SimpleRNG(0)
+    val ra: Rand[Int] = unit(1)
+    val rb: Rand[Int] = unit(2)
+    assert(map2(ra, rb)((a, b) => a + b).apply(rng) == unit(3).apply(rng))
   }
 
   test(
     "Ex 6.7 2つのRNG遷移の組み合わせが可能であるとしたら、それらのリスト全体を結合することも可能であるはずだ。遷移のリストを1つの遷移にまとめるためのsequenceを実装せよ。それを使って、以前に記述したints関数を再実装せよ。その際には、標準ライブラリのList.fill(n)(x)関数を使ってxをn回繰り返すリストを作成できる。") {
     def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
       fs.foldRight(unit(List.empty[A]))((a, b) => map2(a, b)(_ :: _))
+
+    val rng: SimpleRNG = SimpleRNG(0)
+    val ra: Rand[Int] = unit(1)
+    val rb: Rand[Int] = unit(2)
+    val rc: Rand[Int] = unit(3)
+    val rd: Rand[Int] = unit(4)
+    val re: Rand[Int] = unit(5)
+
+    assert(
+      sequence(List(ra, rb, rc, rd, re)).apply(rng)
+        == (List(1, 2, 3, 4, 5), rng))
   }
 
   test("Ex 6.8 flatMapを実装し、それを使ってnonNegativeLessThanを実装せよ。") {
@@ -117,15 +155,15 @@ class StateTest extends FunSuite with Matchers {
         g(a)(rng2)
       }
 
-    def flatMa2[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
+    val rng = SimpleRNG(0)
+    val ra = unit(1)
+    assert(flatMap(ra)(a => unit(a + 1)).apply(rng) == unit(2).apply(rng))
+
+    def flatMap2[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
       rng => {
         g(f(rng)._1)(f(rng)._2)
       }
-
-    def nonNegativeInt(rng: RNG): (Int, RNG) = {
-      val (a, b) = rng.nextInt
-      if (a < 0) (-a + 1, b) else (a, b)
-    }
+    assert(flatMap2(ra)(a => unit(a + 1)).apply(rng) == unit(2).apply(rng))
 
     def nonNegativeLessThan(n: Int): Rand[Int] = {
       flatMap(nonNegativeInt) { i =>
@@ -133,16 +171,39 @@ class StateTest extends FunSuite with Matchers {
         if (i + (n - 1) - mod >= 0) unit(mod) else nonNegativeLessThan(n)
       }
     }
+
+    //違ったrngを与えるとそれぞれ結果が一意に決まる
+    val rng2 = SimpleRNG(5)
+    assert(
+      nonNegativeLessThan(10).apply(rng2)
+        == unit(4).apply(SimpleRNG(126074519596L)))
+    assert(
+      nonNegativeLessThan(99).apply(rng2)
+        == unit(75).apply(SimpleRNG(126074519596L)))
+    val rng3 = SimpleRNG(12)
+    assert(
+      nonNegativeLessThan(10).apply(rng3)
+        == unit(6).apply(SimpleRNG(302578847015L)))
+    assert(
+      nonNegativeLessThan(99).apply(rng3)
+        == unit(22).apply(SimpleRNG(302578847015L)))
   }
 
   test(
     "Ex 6.9 flatMapを使ってmapとmap2を再実装せよ。これが可能であることは、flatMapがmapとmap2よりも強力であると述べていることから明らかである。") {
+    //モナドへの布石
     def map[A, B](s: Rand[A])(f: A => B): Rand[B] =
       flatMap(s)(a => unit(f(a)))
 
+    val rng = SimpleRNG(10)
+    val ra = unit(14)
+    assert(map(ra)(_ * 2).apply(rng) == unit(28).apply(rng))
+
+    val rb = unit(18)
     def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = {
       flatMap(ra)(a => map(rb)(b => f(a, b)))
     }
+    assert(map2(ra, rb)(_ + _).apply(rng) == unit(32).apply(rng))
   }
 
   test(
@@ -191,11 +252,52 @@ class StateTest extends FunSuite with Matchers {
         State((s: S) => go(s, sas, List()))
       }
     }
+
+    val rng = SimpleRNG(8)
+    val rng2 = SimpleRNG(9)
+    val ra: State[RNG, Int] = State(r => r.nextInt)
+    val rb: State[RNG, Double] =
+      State[RNG, Int](r => r.nextInt).map(x => x.toDouble)
+    val rc: State[RNG, Int] = State(r => nonNegativeInt(r))
+    val rd: State[RNG, Int] = State(r => nonNegativeInt(r)).map(_ + 2)
+    val re: State[RNG, Int] = State(r => nonNegativeInt(r)).map(_ * 3)
+
+    //mapのテスト。 生成される値は当然別だが、状態は同じである
+    assert(ra.map(_ * 3).run(rng) == (9233973, SimpleRNG(201719231347L)))
+    assert(ra.map(_ + 4).run(rng) == (3077995, SimpleRNG(201719231347L)))
+
+    //unitはコンテキストをつくるだけで、状態を変化させない
+    assert(unit(4).run(rng) == (4, SimpleRNG(8)))
+    assert(unit(6).run(rng) == (6, SimpleRNG(8)))
+
+    //map2
+    assert(
+      ra.map2(rb)(_ + _).run(rng) == (-6.46631787E8, SimpleRNG(
+        238895596714498L)))
+    assert(
+      ra.map2(rb)(_ + _).run(rng2) == (-1.801731614E9, SimpleRNG(
+        163169759544427L)))
+
+    //flatMapのテスト
+    assert(
+      ra.flatMap(a => unit(a + 1)).run(rng) == (3077992, SimpleRNG(
+        201719231347L)))
+    assert(
+      ra.flatMap(a => unit(a * 2)).run(rng) == (6155982, SimpleRNG(
+        201719231347L)))
+    assert(
+      ra.flatMap(a => unit(a + 1)).run(rng2) == (3462741, SimpleRNG(
+        226934135264L)))
+
+    //sequenceのテスト
+    assert(
+      State.sequence(List(ra, rb, rc, rd, re)).run(rng)
+        == (List(3077991, -6.49709778E8, 1351730011, 996922074, -1746628465),
+        SimpleRNG(225805665494183L)))
   }
 
   test(
     "Ex 6.11 Stateの使用に慣れるために、単純なスナックの自動販売機をモデリングする有限状態オートマトンを実装せよ。この自動販売機では、2種類の入力を使用する。すなわち、効果を投入することができ、ハンドルを回してスナックを取り出すことができる。自動販売機はロックされた状態とロックが解除された状態のどちらかになる。また、残りのスナックの数と自動販売機に投入された硬貨の数も追跡する。") {
-    import fpinscala.chapter06._
 
     object Candy {
       def update(i: Input)(s: Machine): Machine =
