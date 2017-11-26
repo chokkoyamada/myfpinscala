@@ -1,7 +1,7 @@
 package fpinscala.chapter07
 
 import org.scalatest.{FunSuite, Matchers}
-import parallelism.Par.Par
+import fpinscala.parallelism.Par.Par
 import java.util.concurrent._
 
 /**
