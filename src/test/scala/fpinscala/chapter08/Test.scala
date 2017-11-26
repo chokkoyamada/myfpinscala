@@ -1,6 +1,6 @@
 package fpinscala.chapter08
 
-import fpinscala.state.{RNG, State}
+import fpinscala.chapter06.{RNG, State}
 import org.scalatest.{FunSuite, Matchers}
 
 /**

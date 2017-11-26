@@ -2,7 +2,7 @@ package fpinscala.chapter04
 
 import org.scalatest.FunSuite
 
-class Test extends FunSuite {
+class OptionTest extends FunSuite {
   test(
     "Ex 4.1 リスト4-4のすべての関数をOptionで実装せよ。各関数を実装するときに、その関数の意味と、それを使用するであろう状況について考えること。どの関数をいつ使用するかについては、後ほど考察する。") {
     sealed trait Option[+A] {
@@ -109,10 +109,5 @@ class Test extends FunSuite {
     assert(traverse(List(2, 3, 9))(x => Some(x * 2)) == Some(List(4, 6, 18)))
     assert(
       traverse(List("a", "", "c"))(s => if (s.isEmpty) None else Some(s)) == None)
-  }
-
-  test("Ex 4.6 Right値を操作するmap, flatMap, orElse, map2をEitherに追加せよ。") {
-    assert(Right(2).map(_ * 2) == Right(4))
-    assert(Left(2).map(x => x) == Left(2)) //TODO Rightの型アノテーションするにはどうすればいい？
   }
 }

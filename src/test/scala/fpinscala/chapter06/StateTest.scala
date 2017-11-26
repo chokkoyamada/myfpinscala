@@ -1,12 +1,12 @@
 package fpinscala.chapter06
 
-import fpinscala.state.{RNG, State}
-import fpinscala.state.RNG._
+import fpinscala.chapter06.{RNG, State}
+import fpinscala.chapter06.RNG._
 import org.scalatest.{FunSuite, Matchers}
 
 import scala.collection.mutable.ListBuffer
 
-class Test extends FunSuite with Matchers {
+class StateTest extends FunSuite with Matchers {
   test("同じSeedのSimpleRNGは常に同じ値を返し、参照透過性を保っている") {
     val rng = SimpleRNG(42)
 
@@ -195,7 +195,7 @@ class Test extends FunSuite with Matchers {
 
   test(
     "Ex 6.11 Stateの使用に慣れるために、単純なスナックの自動販売機をモデリングする有限状態オートマトンを実装せよ。この自動販売機では、2種類の入力を使用する。すなわち、効果を投入することができ、ハンドルを回してスナックを取り出すことができる。自動販売機はロックされた状態とロックが解除された状態のどちらかになる。また、残りのスナックの数と自動販売機に投入された硬貨の数も追跡する。") {
-    import fpinscala.state._
+    import fpinscala.chapter06._
 
     object Candy {
       def update(i: Input)(s: Machine): Machine =
@@ -231,7 +231,7 @@ class Test extends FunSuite with Matchers {
   }
 
   test("State.getについて") {
-    import fpinscala.state.State._
+    import fpinscala.chapter06.State._
     //状態がrunされれば値を返す　
     get.run(1) shouldBe (1, 1)
     get[Int].run(2) shouldBe (2, 2)
