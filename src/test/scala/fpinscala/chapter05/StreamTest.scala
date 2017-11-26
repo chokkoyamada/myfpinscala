@@ -2,7 +2,7 @@ package fpinscala.chapter05
 
 import org.scalatest.FunSuite
 
-class Test extends FunSuite {
+class StreamTest extends FunSuite {
   test(
     "Ex 5.1 StreamをListに変換し、それによりストリームを強制的に評価する関数を記述せよ。結果はREPLで確認できる。標準ライブラリの通樹のList型への変換が可能である。この関数と、Streamを操作する他の関数は、Stream Traitの中に配置できる。") {
     assert(Stream(1, 2, 3).toList == List(1, 2, 3))

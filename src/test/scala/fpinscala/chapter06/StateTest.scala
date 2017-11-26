@@ -1,6 +1,5 @@
 package fpinscala.chapter06
 
-import fpinscala.chapter06.{RNG, State}
 import fpinscala.chapter06.RNG._
 import org.scalatest.{FunSuite, Matchers}
 
@@ -35,7 +34,8 @@ class StateTest extends FunSuite with Matchers {
     }
   }
 
-  test("Ex 6.3 ペア(Int, Double) ペア(Double, Int), および三要素のタプル(Double, Double, Double)を生成する関数を記述せよ。すでに作成済みの関数を再利用できるはずだ。") {
+  test(
+    "Ex 6.3 ペア(Int, Double) ペア(Double, Int), および三要素のタプル(Double, Double, Double)を生成する関数を記述せよ。すでに作成済みの関数を再利用できるはずだ。") {
     def double(rng: RNG): (Double, RNG) = {
       val (a, b) = rng.nextInt
       ((a / Int.MaxValue).toDouble, b)
